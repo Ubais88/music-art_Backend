@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     email: {
       type: String,
       required: true,
@@ -29,8 +28,12 @@ const userSchema = new mongoose.Schema(
         message: "Password must be at least 5 characters long",
       },
     },
+    cart: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    }]
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model("User", userSchema);
