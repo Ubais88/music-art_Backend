@@ -29,7 +29,8 @@ exports.signup = async (req, res) => {
     // Check if user already exists
     const existingByEmail = await User.findOne({ email });
     const existingByMobile = await User.findOne({ mobile });
-    if (existingEmail || existingMobile) {
+
+    if (existingByEmail || existingByMobile) {
       return res.status(400).json({
         success: false,
         message: "User already exists. Please sign in to continue.",
@@ -78,7 +79,7 @@ exports.login = async (req, res) => {
 
     // Find user with provided email or number
     const user = await User.findOne({
-      $or: [{ email: emailOrNumber }, { phoneNumber: emailOrNumber }],
+      $or: [{ email: emailOrNumber }, { mobile: emailOrNumber }],
     });
 
     if (!user) {
