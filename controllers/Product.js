@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const User = require("../models/User");
 
 exports.getAllproducts = async (req, res) => {
   try {
@@ -55,5 +56,51 @@ exports.getProduct = async (req, res) => {
       error: error.message,
       message: "something went wrong during fetching product",
     });
+  }
+};
+
+exports.addToCart = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+     
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    const productIndex = user.cart.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (productIndex !== -1) {
+      if (user.cart[productIndex].quantity < 8) {
+        user.cart[productIndex].quantity += 1;
+      }
+    } else {
+      user.cart.push({ productId: productId, quantity: 1 });
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      user,
+      message: "Product added to cart successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
