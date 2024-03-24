@@ -1,3 +1,4 @@
+const Order = require("../models/Order");
 const Product = require("../models/Product");
 const User = require("../models/User");
 
@@ -60,3 +61,43 @@ exports.getProduct = async (req, res) => {
 };
 
 
+exports.order = async (req, res) => {
+  try {
+    const { name, address, orderFromCart, productId } = req.body;
+    const userId = req.user.id;
+
+    if (!name || !address) {
+      return res.status(400).json({ status: "FAILED", message: "Empty Field" });
+    }
+
+    let products;
+    if (!orderFromCart) {
+      products = [{ productId, quantity: 1 }]; // Assuming quantity is always 1 for direct orders
+    } else {
+      const user = await User.findById(userId).populate("cart.product");
+      products = user.cart.map((item) => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+      }));
+    }
+
+    const order = new Order({
+      userId,
+      name,
+      address,
+      products,
+    });
+
+    await order.save();
+
+    if (orderFromCart) {
+      // Clear user's cart if the order is from cart
+      const user = await User.findByIdAndUpdate(userId, { cart: [] });
+    }
+
+    res.status(200).json({ status: "SUCCESS", message: "Order Successful" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
