@@ -11,6 +11,7 @@ router.post("/allproducts", getAllproducts);
 router.get("/details/:productId", getProduct);
 router.post('/addtocart' , addToCart);
 router.post('/updatecartitemquantity', updateCartItemQuantity);
+router.get('/cart-items', updateCartItemQuantity);
 
 
 // Export the router for use in the main application
