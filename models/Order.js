@@ -15,6 +15,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    paymentMethod:{
+      type: String,
+      enum:["Pay on Delivery" ,"UPI", "CARD"],
+      reuired: true,
+    },
     products: [
       {
         productId: {
@@ -28,6 +33,14 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+    totalAmount: {
+      type: String,
+      required: true,
+    },
+    grandTotal: {
+      type: String,
+      required: true,
+    },
     orderTime: {
       type: Date,
       default: Date.now,

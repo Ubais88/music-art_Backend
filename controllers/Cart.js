@@ -1,7 +1,6 @@
 const Product = require("../models/Product");
 const User = require("../models/User");
 
-
 exports.addToCart = async (req, res) => {
   try {
     const { productId } = req.body;
@@ -110,16 +109,24 @@ exports.getUserCart = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate('cart.product');
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
+    // Calculate the total amount
+    let totalAmount = 0;
+    user.cart.forEach((item) => {
+      totalAmount += item.product.price * item.quantity;
+    });
+
     res.status(200).json({
       success: true,
       cart: user.cart,
+      totalAmount,
+      withConveniencefee:totalAmount+45,
       message: "Cart product fetched successfully",
     });
   } catch (error) {
