@@ -72,7 +72,7 @@ exports.addToCart = async (req, res) => {
         message: "User not found",
       });
     }
-     
+
     const product = await Product.findById(productId);
     if (!product) {
       return res
@@ -100,7 +100,48 @@ exports.addToCart = async (req, res) => {
       message: "Product added to cart successfully",
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      message: "something went wrong during fetching product",
+    });
+  }
+};
+
+exports.updateCartItemQuantity = async (req, res) => {
+  try {
+    const { userId, productId, quantity } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find the index of the product in the user's cart
+    const productIndex = user.cart.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (productIndex !== -1) {
+      user.cart[productIndex].quantity = quantity;
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        user,
+        message: "Quantity updated successfully",
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found in cart",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      message: "something went wrong during fetching product",
+    });
   }
 };
