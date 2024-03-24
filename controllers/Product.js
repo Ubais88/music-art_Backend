@@ -110,7 +110,8 @@ exports.addToCart = async (req, res) => {
 
 exports.updateCartItemQuantity = async (req, res) => {
   try {
-    const { userId, productId, quantity } = req.body;
+    const { productId, quantity } = req.body;
+    const userId = req.user.id;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -145,3 +146,4 @@ exports.updateCartItemQuantity = async (req, res) => {
     });
   }
 };
+
