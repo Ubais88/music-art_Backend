@@ -9,6 +9,4 @@ router.post("/signup", signup);
 // Route for user login
 router.post("/login", login);
 
-
-// Export the router for use in the main application
 module.exports = router;
