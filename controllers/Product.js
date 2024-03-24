@@ -60,44 +60,97 @@ exports.getProduct = async (req, res) => {
   }
 };
 
-
-exports.order = async (req, res) => {
+exports.placeOrder = async (req, res) => {
   try {
-    const { name, address, orderFromCart, productId } = req.body;
+    const { name, address, paymentMethod, orderFromCart, productId } = req.body;
     const userId = req.user.id;
 
-    if (!name || !address) {
-      return res.status(400).json({ status: "FAILED", message: "Empty Field" });
+    if (!name || !address || !paymentMethod) {
+      return res.status(400).json({
+        status: false,
+        message: "Empty Field",
+      });
+    }
+
+    const user = await User.findById(userId).populate("cart.product");
+
+    if (orderFromCart && (!user.cart || user.cart.length === 0)) {
+      return res.status(400).json({
+        status: false,
+        message: "Cart is empty. Add products to cart before placing an order.",
+      });
     }
 
     let products;
+    let totalAmount = 0;
+
     if (!orderFromCart) {
-      products = [{ productId, quantity: 1 }]; // Assuming quantity is always 1 for direct orders
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
+      products = [{ productId: product._id, quantity: 1 }];
+      totalAmount += product.price;
     } else {
-      const user = await User.findById(userId).populate("cart.product");
       products = user.cart.map((item) => ({
         productId: item.product._id,
         quantity: item.quantity,
       }));
+      user.cart.forEach((item) => {
+        totalAmount += item.product.price * item.quantity;
+      });
     }
 
     const order = new Order({
       userId,
       name,
       address,
+      paymentMethod,
       products,
+      totalAmount: totalAmount.toFixed(2),
+      grandTotal: totalAmount.toFixed(2) + 45,
     });
-
     await order.save();
 
     if (orderFromCart) {
-      // Clear user's cart if the order is from cart
-      const user = await User.findByIdAndUpdate(userId, { cart: [] });
+      await User.findByIdAndUpdate(userId, { cart: [] });
     }
 
-    res.status(200).json({ status: "SUCCESS", message: "Order Successful" });
+    res.status(200).json({
+      status: true,
+      order,
+      message: "Order Successful",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+exports.getAllUserOrders = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const orders = await Order.find({ userId }).populate('products.productId');
+
+    res.status(200).json({
+      success: true,
+      orders,
+      message: "User's orders fetched successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
