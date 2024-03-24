@@ -30,3 +30,30 @@ exports.getAllproducts = async (req, res) => {
     });
   }
 };
+
+exports.getProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const productdetails = await Product.findById(productId);
+
+    if (!productdetails) {
+      return res.status(400).json({
+        success: false,
+        message: "product is missing or productId is wrong",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      productdetails,
+      message: "product fetched successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      message: "something went wrong during fetching product",
+    });
+  }
+};
