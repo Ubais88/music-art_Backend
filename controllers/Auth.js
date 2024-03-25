@@ -4,13 +4,11 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 
-// Signup Controller for Registering USers
+// Signup Controller for Registering Users
 exports.signup = async (req, res) => {
   try {
-    // Destructure fields from the request body
     const { name, email, mobile, password } = req.body;
 
-    // Check if All Details are there or not
     if (!name || !email || !mobile || !password) {
       return res.status(403).send({
         success: false,
@@ -18,7 +16,6 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // Check if password meets minimum length requirement
     if (password.length < 5) {
       return res.status(400).json({
         success: false,
@@ -40,6 +37,7 @@ exports.signup = async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create user
     const user = await User.create({
       name,
       email,
@@ -47,10 +45,23 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
     });
 
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        email: user.email,
+        id: user._id.toString(),
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+
     return res.status(200).json({
       success: true,
       user,
-      message: "User registered successfully",
+      token,
+      message: "User registered successfully and logged in",
     });
   } catch (error) {
     console.error(error);
