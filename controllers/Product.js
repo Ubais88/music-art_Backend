@@ -7,7 +7,7 @@ exports.getAllproducts = async (req, res) => {
     const { headphoneType, company, color, price, searchTerm, sortBy } =
       req.query;
 
-    // Fields to include in documents 
+    // Fields to include in documents
     const fieldsToInclude = {
       brand: 1,
       model: 1,
@@ -47,7 +47,6 @@ exports.getAllproducts = async (req, res) => {
 
     let products = await Product.find(filter).select(fieldsToInclude);
 
-    
     // Apply sorting if sortBy is provided
     if (sortBy) {
       if (sortBy === "PriceLowest") {
@@ -108,7 +107,11 @@ exports.placeOrder = async (req, res) => {
     const { name, address, paymentMethod, orderFromCart, productId } = req.body;
     const userId = req.user.id;
 
-    if (!name || !address || !paymentMethod) {
+    if (
+      !name ||
+      !address ||
+      !["Pay on Delivery", "UPI", "CARD"].includes(paymentMethod)
+    ) {
       return res.status(400).json({
         status: false,
         message: "Empty Field",
@@ -195,3 +198,6 @@ exports.getAllUserOrders = async (req, res) => {
     });
   }
 };
+
+
+

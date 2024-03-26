@@ -9,7 +9,7 @@ const { authMiddleware } = require("../middlewares/authMiddleware");
 router.get("/allproducts", getAllproducts);
 router.get("/details/:productId", getProduct);
 router.put("/place-order", authMiddleware, placeOrder);
-router.get("/get-order", authMiddleware, getAllUserOrders);
+router.get("/get-orders", authMiddleware, getAllUserOrders);
 
 // Export the router for use in the main application
 module.exports = router;

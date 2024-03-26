@@ -111,22 +111,26 @@ exports.getUserCart = async (req, res) => {
 
     const user = await User.findById(userId).populate("cart.product");
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Calculate the total amount
+    // Calculate total amount for each product and overall total
     let totalAmount = 0;
     user.cart.forEach((item) => {
-      totalAmount += item.product.price * item.quantity;
+      const productTotal = item.product.price * item.quantity;
+      totalAmount += productTotal;
+      // Add productTotal to each item for individual total
+      item.totalAmount = productTotal;
     });
+
+    // Calculate total with convenience fee
+    const withConveniencefee = totalAmount + 45;
 
     res.status(200).json({
       success: true,
       cart: user.cart,
       totalAmount,
-      withConveniencefee: totalAmount + 45,
+      withConveniencefee,
       message: "Cart product fetched successfully",
     });
   } catch (error) {
