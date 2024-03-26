@@ -6,7 +6,7 @@ const { getAllproducts, getProduct, placeOrder, getAllUserOrders } = require("..
 const { authMiddleware } = require("../middlewares/authMiddleware");
 
 // Route for user createQuiz
-router.post("/allproducts", getAllproducts);
+router.get("/allproducts", getAllproducts);
 router.get("/details/:productId", getProduct);
 router.put("/place-order", authMiddleware, placeOrder);
 router.get("/get-order", authMiddleware, getAllUserOrders);

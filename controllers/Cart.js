@@ -109,7 +109,7 @@ exports.getUserCart = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const user = await User.findById(userId).populate('cart.product');
+    const user = await User.findById(userId).populate("cart.product");
     if (!user) {
       return res
         .status(404)
@@ -126,8 +126,36 @@ exports.getUserCart = async (req, res) => {
       success: true,
       cart: user.cart,
       totalAmount,
-      withConveniencefee:totalAmount+45,
+      withConveniencefee: totalAmount + 45,
       message: "Cart product fetched successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getCartLength = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    let cartLength = 0;
+    user.cart.forEach((item) => {
+      cartLength += item.quantity;
+    });
+
+    res.status(200).json({
+      success: true,
+      cartLength,
+      message: "Cart length fetched successfully",
     });
   } catch (error) {
     console.error(error);

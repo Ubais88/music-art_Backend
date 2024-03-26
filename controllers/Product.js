@@ -4,7 +4,10 @@ const User = require("../models/User");
 
 exports.getAllproducts = async (req, res) => {
   try {
-    // fields to include  documents
+    const { headphoneType, company, color, price, searchTerm, sortBy } =
+      req.query;
+
+    // Fields to include in documents 
     const fieldsToInclude = {
       brand: 1,
       model: 1,
@@ -15,8 +18,48 @@ exports.getAllproducts = async (req, res) => {
       images: 1,
     };
 
-    // Fetch products with only specified fields
-    const products = await Product.find({}).select(fieldsToInclude);
+    // Build filter object based on query parameters
+    const filter = {};
+    if (headphoneType) {
+      filter.headphoneType = headphoneType;
+    }
+    if (company) {
+      filter.brand = { $regex: new RegExp(company, "i") }; // Case-insensitive search
+    }
+    if (color) {
+      filter.color = { $regex: new RegExp(color, "i") }; // Case-insensitive search
+    }
+    if (price) {
+      const [minPrice, maxPrice] = price.split("-");
+      filter.price = { $gte: minPrice, $lte: maxPrice };
+    }
+    if (searchTerm) {
+      const searchTermRegex = new RegExp(searchTerm, "i");
+      filter.$or = [
+        { brand: { $regex: searchTermRegex } },
+        { model: { $regex: searchTermRegex } },
+      ];
+    }
+
+    // if (featured !== undefined) {
+    //   filter.featured = featured;
+    // }
+
+    let products = await Product.find(filter).select(fieldsToInclude);
+
+    
+    // Apply sorting if sortBy is provided
+    if (sortBy) {
+      if (sortBy === "PriceLowest") {
+        products = products.sort((a, b) => a.price - b.price);
+      } else if (sortBy === "PriceHighest") {
+        products = products.sort((a, b) => b.price - a.price);
+      } else if (sortBy === "a-z") {
+        products = products.sort((a, b) => a.model.localeCompare(b.model));
+      } else if (sortBy === "z-a") {
+        products = products.sort((a, b) => b.model.localeCompare(a.model));
+      }
+    }
 
     return res.status(200).json({
       success: true,
@@ -133,19 +176,17 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-
 exports.getAllUserOrders = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const orders = await Order.find({ userId }).populate('products.productId');
+    const orders = await Order.find({ userId }).populate("products.productId");
 
     res.status(200).json({
       success: true,
       orders,
       message: "User's orders fetched successfully",
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
