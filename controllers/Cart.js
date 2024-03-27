@@ -111,7 +111,9 @@ exports.getUserCart = async (req, res) => {
 
     const user = await User.findById(userId).populate("cart.product");
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Calculate total amount for each product and overall total
@@ -129,6 +131,35 @@ exports.getUserCart = async (req, res) => {
     res.status(200).json({
       success: true,
       cart: user.cart,
+      totalAmount,
+      withConveniencefee,
+      message: "Cart product fetched successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.directInCart = async (req, res) => {
+  try {
+    const {productId} = req.params;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "product not found",
+      });
+    }
+    // Calculate total amount for each product and overall total
+    const totalAmount = product.price;
+
+    // Calculate total with convenience fee
+    const withConveniencefee = totalAmount + 45;
+
+    res.status(200).json({
+      success: true,
+      product,
       totalAmount,
       withConveniencefee,
       message: "Cart product fetched successfully",

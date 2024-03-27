@@ -199,5 +199,38 @@ exports.getAllUserOrders = async (req, res) => {
   }
 };
 
+exports.getOneUserOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    
+    if (!order || order.userId.toString() !== userId) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or does not belong to the user",
+      });
+    }
+
+    const products = await Product.find({ _id: { $in: order.products.map(product => product.productId) } });
+
+    res.status(200).json({
+      success: true,
+      order: {
+        ...order.toJSON(),
+        products: products.map(product => product.toJSON())
+      },
+      message: "User's order fetched successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 
 
