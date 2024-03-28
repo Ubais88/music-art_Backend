@@ -6,7 +6,6 @@ exports.getAllproducts = async (req, res) => {
   try {
     const { headphoneType, company, color, price, searchTerm, sortBy } =
       req.query;
-
     // Fields to include in documents
     const fieldsToInclude = {
       brand: 1,
@@ -40,10 +39,6 @@ exports.getAllproducts = async (req, res) => {
         { model: { $regex: searchTermRegex } },
       ];
     }
-
-    // if (featured !== undefined) {
-    //   filter.featured = featured;
-    // }
 
     let products = await Product.find(filter).select(fieldsToInclude);
 
@@ -106,7 +101,6 @@ exports.placeOrder = async (req, res) => {
   try {
     const { name, address, paymentMethod, orderFromCart, productId } = req.body;
     const userId = req.user.id;
-
     if (
       !name ||
       !address ||
@@ -205,7 +199,7 @@ exports.getOneUserOrder = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await Order.findById(orderId);
-    
+
     if (!order || order.userId.toString() !== userId) {
       return res.status(404).json({
         success: false,
@@ -213,13 +207,15 @@ exports.getOneUserOrder = async (req, res) => {
       });
     }
 
-    const products = await Product.find({ _id: { $in: order.products.map(product => product.productId) } });
+    const products = await Product.find({
+      _id: { $in: order.products.map((product) => product.productId) },
+    });
 
     res.status(200).json({
       success: true,
       order: {
         ...order.toJSON(),
-        products: products.map(product => product.toJSON())
+        products: products.map((product) => product.toJSON()),
       },
       message: "User's order fetched successfully",
     });
@@ -231,6 +227,3 @@ exports.getOneUserOrder = async (req, res) => {
     });
   }
 };
-
-
-
