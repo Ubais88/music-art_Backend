@@ -117,6 +117,7 @@ exports.login = async (req, res) => {
         success: true,
         token,
         name: user.name,
+        mobile: user.mobile,
         message: `User Login Success`,
       });
     } else {

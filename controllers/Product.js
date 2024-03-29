@@ -8,8 +8,8 @@ exports.getAllproducts = async (req, res) => {
       req.query;
     // Fields to include in documents
     const fieldsToInclude = {
+      productName: 1,
       brand: 1,
-      model: 1,
       shortDescription: 1,
       price: 1,
       color: 1,
@@ -23,10 +23,10 @@ exports.getAllproducts = async (req, res) => {
       filter.headphoneType = headphoneType;
     }
     if (company) {
-      filter.brand = { $regex: new RegExp(company, "i") }; // Case-insensitive search
+      filter.brand = { $regex: new RegExp(company, "i") };
     }
     if (color) {
-      filter.color = { $regex: new RegExp(color, "i") }; // Case-insensitive search
+      filter.color = { $regex: new RegExp(color, "i") };
     }
     if (price) {
       const [minPrice, maxPrice] = price.split("-");
@@ -34,10 +34,7 @@ exports.getAllproducts = async (req, res) => {
     }
     if (searchTerm) {
       const searchTermRegex = new RegExp(searchTerm, "i");
-      filter.$or = [
-        { brand: { $regex: searchTermRegex } },
-        { model: { $regex: searchTermRegex } },
-      ];
+      filter = { productName: { $regex: searchTermRegex } };
     }
 
     let products = await Product.find(filter).select(fieldsToInclude);
@@ -49,9 +46,13 @@ exports.getAllproducts = async (req, res) => {
       } else if (sortBy === "PriceHighest") {
         products = products.sort((a, b) => b.price - a.price);
       } else if (sortBy === "a-z") {
-        products = products.sort((a, b) => a.model.localeCompare(b.model));
+        products = products.sort((a, b) =>
+          a.productName.localeCompare(b.productName)
+        );
       } else if (sortBy === "z-a") {
-        products = products.sort((a, b) => b.model.localeCompare(a.model));
+        products = products.sort((a, b) =>
+          b.productName.localeCompare(a.productName)
+        );
       }
     }
 
