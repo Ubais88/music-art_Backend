@@ -27,6 +27,7 @@ exports.getAllproducts = async (req, res) => {
     }
     if (color) {
       filter.color = { $regex: new RegExp(color, "i") };
+
     }
     if (price) {
       const [minPrice, maxPrice] = price.split("-");
@@ -34,7 +35,7 @@ exports.getAllproducts = async (req, res) => {
     }
     if (searchTerm) {
       const searchTermRegex = new RegExp(searchTerm, "i");
-      filter = { productName: { $regex: searchTermRegex } };
+      filter.productName = { $regex: searchTermRegex };
     }
 
     let products = await Product.find(filter).select(fieldsToInclude);
