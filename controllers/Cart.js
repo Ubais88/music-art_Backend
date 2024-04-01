@@ -58,7 +58,6 @@ exports.addToCart = async (req, res) => {
 exports.updateCartItemQuantity = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
-
     if (!productId || !quantity || quantity <= 0 || quantity > 8) {
       return res.status(404).json({
         success: false,
@@ -68,7 +67,8 @@ exports.updateCartItemQuantity = async (req, res) => {
     }
 
     const userId = req.user.id;
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate("cart.product");
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -78,16 +78,31 @@ exports.updateCartItemQuantity = async (req, res) => {
 
     // Find the index of the product in the user's cart
     const productIndex = user.cart.findIndex(
-      (item) => item.product.toString() === productId
+      (item) => item.product._id.toString() === productId
     );
 
     if (productIndex !== -1) {
       user.cart[productIndex].quantity = quantity;
       await user.save();
 
+      const updatedItem = user.cart[productIndex];
+      const updatedPrice = updatedItem.quantity * updatedItem.product.price;
+
+      let totalAmount = 0;
+      user.cart.forEach((item) => {
+        const productTotal = item.product.price * item.quantity;
+        totalAmount += productTotal;
+        // Add productTotal to each item for individual total
+        item.totalAmount = productTotal;
+      });
+      const withConveniencefee = totalAmount + 45;
+
       return res.status(200).json({
         success: true,
         user,
+        totalAmount,
+        updatedPrice,
+        withConveniencefee,
         message: "Quantity updated successfully",
       });
     } else {
@@ -100,7 +115,7 @@ exports.updateCartItemQuantity = async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      message: "something went wrong during fetching product",
+      message: "Something went wrong during fetching product",
     });
   }
 };
@@ -143,7 +158,7 @@ exports.getUserCart = async (req, res) => {
 
 exports.directInCart = async (req, res) => {
   try {
-    const {productId} = req.params;
+    const { productId } = req.params;
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({
