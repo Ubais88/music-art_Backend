@@ -88,18 +88,20 @@ exports.updateCartItemQuantity = async (req, res) => {
       const updatedItem = user.cart[productIndex];
       const updatedPrice = updatedItem.quantity * updatedItem.product.price;
 
+      let cartLength = 0;
       let totalAmount = 0;
       user.cart.forEach((item) => {
         const productTotal = item.product.price * item.quantity;
         totalAmount += productTotal;
-        // Add productTotal to each item for individual total
         item.totalAmount = productTotal;
+        cartLength += item.quantity;
       });
       const withConveniencefee = totalAmount + 45;
 
       return res.status(200).json({
         success: true,
         user,
+        cartLength,
         totalAmount,
         updatedPrice,
         withConveniencefee,
@@ -131,13 +133,13 @@ exports.getUserCart = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Calculate total amount for each product and overall total
+    let cartLength = 0;
     let totalAmount = 0;
     user.cart.forEach((item) => {
       const productTotal = item.product.price * item.quantity;
       totalAmount += productTotal;
-      // Add productTotal to each item for individual total
       item.totalAmount = productTotal;
+      cartLength += item.quantity;
     });
 
     // Calculate total with convenience fee
@@ -146,6 +148,7 @@ exports.getUserCart = async (req, res) => {
     res.status(200).json({
       success: true,
       cart: user.cart,
+      cartLength,
       totalAmount,
       withConveniencefee,
       message: "Cart product fetched successfully",
